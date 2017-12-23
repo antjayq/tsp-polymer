@@ -1,0 +1,120 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/polymer/polymer-element.html">
+
+<link rel="import" href="../../bower_components/paper-input/paper-input-container.html">
+<link rel="import" href="../../bower_components/paper-input/paper-input-error.html">
+<link rel="import" href="../../bower_components/paper-input/paper-input.html">
+
+<link rel="import" href="tsp-map.html">
+
+<dom-module id="tsp-poly">
+  <template>
+    <div>
+      <div>
+        <paper-input-container style="display:inline-block; width:40%;">
+          <label slot="label">Number of Cities</label>
+          <input slot="input" class="paper-input-input" value="{{size::input}}">
+        </paper-input-container>
+        <paper-input-container style="display:inline-block; width:40%;">
+          <label slot="label">Number of Permutations</label>
+          <input slot="input" class="paper-input-input" readonly="" value="{{size::input}}!">
+        </paper-input-container>
+      </div>
+
+      <div>
+        <paper-input-container style="display:inline-block; width:40%;">
+          <label slot="label">Size of Trials</label>
+          <input slot="input" class="paper-input-input" value="{{population::input}}">
+        </paper-input-container>
+
+        <paper-input-container style="display:inline-block; width:40%;">
+          <label slot="label">Number of Generations</label>
+          <input slot="input" class="paper-input-input" value="{{generation::input}}">
+        </paper-input-container>
+      </div>
+    </div>
+
+    <div>
+      <tsp-map size="{{size}}" population="{{population}}" generation="{{generation}}"></tsp-map>
+    </div>
+  </template>
+
+  <script>
+    // Templates inside SVG won't work in polymer-1.0 without some monkeypatching.
+    (function(){
+      var doc = document.currentScript.ownerDocument;
+      var root = doc.querySelector('dom-module > template').content;
+      var templates = root.querySelectorAll('svg template');
+      var el, template, attribs, attrib, count, child, content;
+      for (var i=0; i<templates.length; i++) {
+        el = templates[i];
+        template = el.ownerDocument.createElement('template');
+        el.parentNode.insertBefore(template, el);
+        attribs = el.attributes;
+        count = attribs.length;
+        while (count-- > 0) {
+          attrib = attribs[count];
+          template.setAttribute(attrib.name, attrib.value);
+          el.removeAttribute(attrib.name);
+        }
+        el.parentNode.removeChild(el);
+        content = template.content;
+        while ((child = el.firstChild)) {
+          content.appendChild(child);
+        }
+      }
+    })();
+
+    /**
+     * @customElement
+     * @polymer
+     */
+    class TspPoly extends Polymer.Element {
+      static get is() { return 'tsp-poly'; }
+      static get properties() {
+        return {
+          size:{
+            type: Number,
+            notify: true,
+            observer: '_inputSize'
+          },
+          population:{
+            type: Number,
+            notify: true,
+            observer: '_inputPopulation'
+          },
+          generation:{
+            type: Number,
+            notify: true,
+            observer: '_inputGeneration'
+          }
+        };
+      }
+
+      // Observer method defineds as a class method
+      _inputSize(newSize, oldSize) {
+        var size = parseInt(newSize);
+        if (size && size >= 4 && size <= 100 && size != this.size){
+          this.size = size;
+        }
+      }
+
+      _inputPopulation(newPopulation, oldPopulation) {
+        const POPULATION_LIMIT = 100000;
+        var population = parseInt(newPopulation);
+        if (population && population >= this.size && population <= POPULATION_LIMIT && population != this.population){
+          this.population = population;
+        }
+      }
+
+      _inputGeneration(newGeneration, oldGeneration) {
+        var generation = parseInt(newGeneration);
+        if (generation && generation >= 1 && generation <= this.size && generation != this.generation){
+          this.generation = generation;
+        }
+      }
+    }
+
+    window.customElements.define(TspPoly.is, TspPoly);
+  </script>
+</dom-module>
